@@ -1,0 +1,15 @@
+{
+    "name": "dorian/backend",
+    "autoload": {
+        "psr-4": {
+            "Dorian\\Backend\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Weildor",
+            "email": "240065@utxicotepec.edu.mx"
+        }
+    ],
+    "require": {}
+}
