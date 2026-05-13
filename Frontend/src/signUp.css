@@ -1,0 +1,87 @@
+/* Contenedor principal que ocupa toda la pantalla */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* Cambiado a 100vh para centrado total */
+  background-color: #1a1a1a; /* Color oscuro para que la tarjeta resalte */
+}
+
+/* La Tarjeta (Card) */
+.login-form {
+  background-color: #28282c; /* Fondo blanco para la tarjeta */
+  padding: 3rem;             /* Más espacio interno */
+  border-radius: 20px;       /* Bordes más redondeados */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Sombra más profunda */
+  width: 400px;              /* Un poco más ancha */
+  text-align: center;
+  border: none;              /* Quitamos el borde gris aburrido */
+}
+
+.login-form h2 {
+  margin-bottom: 2rem;
+  color: #ffffff;
+  font-size: 2rem;           /* Título más grande */
+  font-family: sans-serif;
+}
+
+/* Grupos de input */
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+.input-group input {
+  width: 90%;
+  padding: 15px;             /* Inputs más altos y cómodos */
+  border: 2px solid #eee;    /* Borde más suave */
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+/* Efecto al hacer clic en el input */
+.input-group input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+/* Botón más moderno */
+.btn-login {
+  width: 100%;
+  padding: 15px;
+  background-color: #007bff;
+  color: rgb(255, 255, 255);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: bold;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.btn-login:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px); /* Efecto de levante */
+}
+/* Estilo para el párrafo que contiene la pregunta */
+.form-footer {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #888; /* Un gris suave para que no compita con el blanco */
+  text-align: center;
+}
+
+/* Estilo para el "link" (Inicia sesión / Sign Up) */
+.link-btn {
+  color: #007bff;
+  cursor: pointer;
+  margin-left: 5px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+/* Efecto visual al pasar el mouse */
+.link-btn:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
