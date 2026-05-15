@@ -11,5 +11,9 @@
             "email": "240065@utxicotepec.edu.mx"
         }
     ],
-    "require": {}
+    "require": {
+        "slim/slim": "4.*",
+        "slim/psr7": "^1.8",
+        "envms/fluentpdo": "^2.2"
+    }
 }
