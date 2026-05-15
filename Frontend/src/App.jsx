@@ -9,10 +9,8 @@ function App() {
   const [busqueda, setBusqueda] = useState("");
   const [form, setForm] = useState({ id: null, nombre: '', stock: '', precio: '' });
   
-  // URL base: http://localhost:8000/api
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // Función para obtener el token guardado
   const getToken = () => localStorage.getItem('token_zapateria');
 
   const fetchZapatos = async () => {
@@ -20,18 +18,13 @@ function App() {
       const res = await fetch(`${API_URL}/zapatos`, {
         method: 'GET',
         headers: { 
-          'Authorization': `Bearer ${getToken()}`, // <--- LLAVE MAESTRA
+          'Authorization': `Bearer ${getToken()}`,
           'Content-Type': 'application/json' 
         }
       });
       const data = await res.json();
-      
-      if (data.response) {
-        setZapatos(data.result); // Aquí llegan los zapatos de la BD
-      } else if (res.status === 401) {
-        // Si el token expiró o es inválido, mandamos al login
-        handleLogout();
-      }
+      if (data.response) setZapatos(data.result);
+      else if (res.status === 401) handleLogout();
     } catch (error) {
       console.error("Error conectando a la API:", error);
     }
@@ -44,7 +37,6 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Ajuste de rutas según Slim 4
     const metodo = form.id ? 'PUT' : 'POST';
     const url = form.id ? `${API_URL}/zapatos/${form.id}` : `${API_URL}/zapatos`;
 
@@ -57,9 +49,10 @@ function App() {
         },
         body: JSON.stringify({ 
           nombre: form.nombre, 
-          stock: parseInt(form.stock), // Aseguramos números
-          precio: parseFloat(form.precio),
-          id_usuario: 1 // Requerido por tu ZapatoModel.php
+          stock: parseInt(form.stock), 
+          precio: parseFloat(form.precio)
+          // ELIMINADO: id_usuario ya no se envía aquí, 
+          // el Backend lo saca del Token automáticamente.
         })
       });
       
@@ -94,7 +87,6 @@ function App() {
     z.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
-  // --- VISTAS ---
   if (view === 'login') return <Login onLoginSuccess={() => setView('inventario')} onGoToSignUp={() => setView('signup')} />;
   if (view === 'signup') return <SignUp onSignUpSuccess={() => setView('login')} onGoToLogin={() => setView('login')} />;
 
