@@ -9,13 +9,17 @@ function App() {
   const [busqueda, setBusqueda] = useState("");
   const [form, setForm] = useState({ id: null, nombre: '', stock: '', precio: '' });
   
-  const API_URL = "http://localhost:3000/zapatos";
+  // 1. Usar la variable de entorno para la URL de la API
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const fetchZapatos = async () => {
     try {
       const res = await fetch(API_URL);
       const data = await res.json();
-      setZapatos(data);
+      // 2. Acceder a .result porque así lo envía tu clase Response.php
+      if (data.response) {
+        setZapatos(data.result);
+      }
     } catch (error) {
       console.error("Error conectando a la API:", error);
     }
@@ -27,28 +31,47 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // 3. Ajuste de URL y Método para PHP
+    // Para PUT/DELETE en PHP usualmente pasamos el ID como parámetro de consulta (?id=)
     const metodo = form.id ? 'PUT' : 'POST';
-    const url = form.id ? `${API_URL}/${form.id}` : API_URL;
+    const url = form.id ? `${API_URL}?id=${form.id}` : API_URL;
 
-    await fetch(url, {
-      method: metodo,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre: form.nombre, stock: form.stock, precio: form.precio })
-    });
-
-    setForm({ id: null, nombre: '', stock: '', precio: '' });
-    fetchZapatos();
+    try {
+      const res = await fetch(url, {
+        method: metodo,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          nombre: form.nombre, 
+          stock: form.stock, 
+          precio: form.precio 
+        })
+      });
+      
+      const resData = await res.json();
+      if(resData.response) {
+        setForm({ id: null, nombre: '', stock: '', precio: '' });
+        fetchZapatos();
+      } else {
+        alert(resData.message);
+      }
+    } catch (error) {
+      console.error("Error al guardar:", error);
+    }
   };
 
   const prepararEdicion = (zapato) => setForm(zapato);
 
   const eliminarZapato = async (id) => {
     if (window.confirm("¿Eliminar este zapato?")) {
-      await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+      // 4. Se envía el ID por URL para que el backend lo capture con $_GET['id']
+      await fetch(`${API_URL}?id=${id}`, { method: 'DELETE' });
       fetchZapatos();
     }
   };
 
+  // 5. Ajuste de filtrado: En DBeaver tu columna es "Stock" (mayúscula) o "stock" 
+  // Asegúrate de que coincida con lo que devuelve el JSON de PHP
   const zapatosFiltrados = zapatos.filter(z => 
     z.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
@@ -62,10 +85,8 @@ function App() {
     return <SignUp onSignUpSuccess={() => setView('login')} onGoToLogin={() => setView('login')} />;
   }
 
-  // --- VISTA DE INVENTARIO ---
   return (
     <div className="inventory-container">
-      {/* HEADER CON BOTÓN DE SALIDA */}
       <header className="inventory-header">
         <h1>Gestión de Inventario</h1>
         <button className="btn-logout" onClick={() => setView('login')}>
@@ -105,17 +126,21 @@ function App() {
           </tr>
         </thead>
         <tbody>
-          {zapatosFiltrados.map(z => (
-            <tr key={z.id}>
-              <td>{z.nombre}</td>
-              <td>{z.stock}</td>
-              <td>${z.precio}</td>
-              <td>
-                <button className="btn-edit" onClick={() => prepararEdicion(z)}>Editar</button>
-                <button className="btn-delete" onClick={() => eliminarZapato(z.id)}>Eliminar</button>
-              </td>
-            </tr>
-          ))}
+          {zapatosFiltrados.length > 0 ? (
+            zapatosFiltrados.map(z => (
+              <tr key={z.id}>
+                <td>{z.nombre}</td>
+                <td>{z.Stock || z.stock}</td> {/* Soporta ambas nomenclaturas */}
+                <td>${z.precio}</td>
+                <td>
+                  <button className="btn-edit" onClick={() => prepararEdicion(z)}>Editar</button>
+                  <button className="btn-delete" onClick={() => eliminarZapato(z.id)}>Eliminar</button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr><td colSpan="4" style={{textAlign: 'center'}}>No se encontraron registros</td></tr>
+          )}
         </tbody>
       </table>
     </div>
