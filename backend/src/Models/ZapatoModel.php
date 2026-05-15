@@ -29,4 +29,34 @@ class ZapatoModel {
         ])->execute();
         return $this->response->SetResponse(true, 'Producto creado');
     }
+    public function eliminar($id) {
+    // Buscamos el zapato por su ID y lo borramos
+    $this->db->deleteFrom('Productos')->where('id', $id)->execute();
+    
+    return $this->response->SetResponse(true, "Productos con ID $id eliminado correctamente");
+}
+public function obtenerPorId($id) {
+    // Usamos .fetch() en lugar de .fetchAll() porque solo queremos uno
+    $resultado = $this->db->from('Productos')->where('id', $id)->fetch(); 
+    
+    if (!$resultado) {
+        return $this->response->SetResponse(false, "No existe el producto con ID $id");
+    }
+
+    $this->response->result = $resultado;
+    return $this->response->SetResponse(true, 'Producto encontrado');
+}
+public function actualizar($id, $data) {
+    $this->db->update('Productos')
+        ->set([
+            'nombre'     => $data->nombre,
+            'stock'      => $data->stock,
+            'precio'     => $data->precio,
+            'id_usuario' => $data->id_usuario // <-- Lo agregamos aquí
+        ])
+        ->where('id', $id)
+        ->execute();
+
+    return $this->response->SetResponse(true, "Producto ID $id actualizado por el usuario $data->id_usuario");
+}
 }
