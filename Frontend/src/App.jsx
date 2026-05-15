@@ -9,16 +9,28 @@ function App() {
   const [busqueda, setBusqueda] = useState("");
   const [form, setForm] = useState({ id: null, nombre: '', stock: '', precio: '' });
   
-  // 1. Usar la variable de entorno para la URL de la API
+  // URL base: http://localhost:8000/api
   const API_URL = import.meta.env.VITE_API_URL;
+
+  // Función para obtener el token guardado
+  const getToken = () => localStorage.getItem('token_zapateria');
 
   const fetchZapatos = async () => {
     try {
-      const res = await fetch(API_URL);
+      const res = await fetch(`${API_URL}/zapatos`, {
+        method: 'GET',
+        headers: { 
+          'Authorization': `Bearer ${getToken()}`, // <--- LLAVE MAESTRA
+          'Content-Type': 'application/json' 
+        }
+      });
       const data = await res.json();
-      // 2. Acceder a .result porque así lo envía tu clase Response.php
+      
       if (data.response) {
-        setZapatos(data.result);
+        setZapatos(data.result); // Aquí llegan los zapatos de la BD
+      } else if (res.status === 401) {
+        // Si el token expiró o es inválido, mandamos al login
+        handleLogout();
       }
     } catch (error) {
       console.error("Error conectando a la API:", error);
@@ -32,19 +44,22 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // 3. Ajuste de URL y Método para PHP
-    // Para PUT/DELETE en PHP usualmente pasamos el ID como parámetro de consulta (?id=)
+    // Ajuste de rutas según Slim 4
     const metodo = form.id ? 'PUT' : 'POST';
-    const url = form.id ? `${API_URL}?id=${form.id}` : API_URL;
+    const url = form.id ? `${API_URL}/zapatos/${form.id}` : `${API_URL}/zapatos`;
 
     try {
       const res = await fetch(url, {
         method: metodo,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json' 
+        },
         body: JSON.stringify({ 
           nombre: form.nombre, 
-          stock: form.stock, 
-          precio: form.precio 
+          stock: parseInt(form.stock), // Aseguramos números
+          precio: parseFloat(form.precio),
+          id_usuario: 1 // Requerido por tu ZapatoModel.php
         })
       });
       
@@ -52,95 +67,73 @@ function App() {
       if(resData.response) {
         setForm({ id: null, nombre: '', stock: '', precio: '' });
         fetchZapatos();
-      } else {
-        alert(resData.message);
       }
     } catch (error) {
       console.error("Error al guardar:", error);
     }
   };
 
-  const prepararEdicion = (zapato) => setForm(zapato);
-
   const eliminarZapato = async (id) => {
     if (window.confirm("¿Eliminar este zapato?")) {
-      // 4. Se envía el ID por URL para que el backend lo capture con $_GET['id']
-      await fetch(`${API_URL}?id=${id}`, { method: 'DELETE' });
+      await fetch(`${API_URL}/zapatos/${id}`, { 
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
       fetchZapatos();
     }
   };
 
-  // 5. Ajuste de filtrado: En DBeaver tu columna es "Stock" (mayúscula) o "stock" 
-  // Asegúrate de que coincida con lo que devuelve el JSON de PHP
+  const handleLogout = () => {
+    localStorage.removeItem('token_zapateria');
+    setView('login');
+  };
+
+  const prepararEdicion = (zapato) => setForm(zapato);
+
   const zapatosFiltrados = zapatos.filter(z => 
     z.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
-  // --- NAVEGACIÓN ---
-  if (view === 'login') {
-    return <Login onLoginSuccess={() => setView('inventario')} onGoToSignUp={() => setView('signup')} />;
-  }
-
-  if (view === 'signup') {
-    return <SignUp onSignUpSuccess={() => setView('login')} onGoToLogin={() => setView('login')} />;
-  }
+  // --- VISTAS ---
+  if (view === 'login') return <Login onLoginSuccess={() => setView('inventario')} onGoToSignUp={() => setView('signup')} />;
+  if (view === 'signup') return <SignUp onSignUpSuccess={() => setView('login')} onGoToLogin={() => setView('login')} />;
 
   return (
     <div className="inventory-container">
       <header className="inventory-header">
         <h1>Gestión de Inventario</h1>
-        <button className="btn-logout" onClick={() => setView('login')}>
-          Cerrar Sesión
-        </button>
+        <button className="btn-logout" onClick={handleLogout}>Cerrar Sesión</button>
       </header>
 
       <div className="form-card">
         <form className="inventory-form" onSubmit={handleSubmit}>
           <input type="text" placeholder="Nombre" value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} required />
           <input type="number" placeholder="Stock" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} required />
-          <input type="number" placeholder="Precio" value={form.precio} onChange={e => setForm({...form, precio: e.target.value})} required />
-          
-          {form.id ? (
-            <button type="submit" className="btn-update">Actualizar</button>
-          ) : (
-            <button type="submit" className="btn-create">Crear</button>
-          )}
+          <input type="number" step="0.01" placeholder="Precio" value={form.precio} onChange={e => setForm({...form, precio: e.target.value})} required />
+          <button type="submit" className={form.id ? "btn-update" : "btn-create"}>
+            {form.id ? 'Actualizar' : 'Crear'}
+          </button>
         </form>
       </div>
 
-      <input 
-        type="text" 
-        className="search-bar" 
-        placeholder="Buscar por nombre..." 
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-      />
+      <input type="text" className="search-bar" placeholder="Buscar..." value={busqueda} onChange={e => setBusqueda(e.target.value)} />
 
       <table className="inventory-table">
         <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Stock</th>
-            <th>Precio</th>
-            <th>Acciones</th>
-          </tr>
+          <tr><th>Nombre</th><th>Stock</th><th>Precio</th><th>Acciones</th></tr>
         </thead>
         <tbody>
-          {zapatosFiltrados.length > 0 ? (
-            zapatosFiltrados.map(z => (
-              <tr key={z.id}>
-                <td>{z.nombre}</td>
-                <td>{z.Stock || z.stock}</td> {/* Soporta ambas nomenclaturas */}
-                <td>${z.precio}</td>
-                <td>
-                  <button className="btn-edit" onClick={() => prepararEdicion(z)}>Editar</button>
-                  <button className="btn-delete" onClick={() => eliminarZapato(z.id)}>Eliminar</button>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr><td colSpan="4" style={{textAlign: 'center'}}>No se encontraron registros</td></tr>
-          )}
+          {zapatosFiltrados.map(z => (
+            <tr key={z.id}>
+              <td>{z.nombre}</td>
+              <td>{z.stock}</td>
+              <td>${z.precio}</td>
+              <td>
+                <button className="btn-edit" onClick={() => prepararEdicion(z)}>Editar</button>
+                <button className="btn-delete" onClick={() => eliminarZapato(z.id)}>Borrar</button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
