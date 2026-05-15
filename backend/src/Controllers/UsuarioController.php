@@ -17,4 +17,10 @@ class UsuarioController {
         $res->getBody()->write(json_encode($data));
         return $res->withHeader('Content-type', 'application/json');
     }
+    public function saveUsuario(Request $req, Response $res) {
+        $params = json_decode($req->getBody()->getContents());
+        $data = $this->model->crear($params);
+        $res->getBody()->write(json_encode($data));
+        return $res->withHeader('Content-type', 'application/json');
+    }
 }

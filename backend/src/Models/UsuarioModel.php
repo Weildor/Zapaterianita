@@ -19,4 +19,15 @@ class UsuarioModel {
         $this->response->result = $resultado;
         return $this->response->SetResponse(true, 'Lista de usuarios cargada');
     }
+    // Función que no encontraba (POST)
+    public function crear($data) {
+        $this->db->insertInto('Usuarios')->values([
+            'nombreUsuario'  => $data->nombreUsuario,
+            'password'       => password_hash($data->password, PASSWORD_DEFAULT), 
+            'email'          => $data->email,
+            'nombreCompleto' => $data->nombreCompleto
+        ])->execute();
+        
+        return $this->response->SetResponse(true, 'Usuario creado exitosamente');
+    }
 }

@@ -25,7 +25,7 @@ class ZapatoModel {
             'nombre'     => $data->nombre,
             'stock'      => $data->stock,
             'precio'     => $data->precio,
-            'usuario_id' => 1 // Valor por defecto para evitar errores de MariaDB
+            'id_usuario' => 1 // Valor por defecto para evitar errores de MariaDB
         ])->execute();
         return $this->response->SetResponse(true, 'Producto creado');
     }
