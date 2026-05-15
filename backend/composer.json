@@ -14,6 +14,7 @@
     "require": {
         "slim/slim": "4.*",
         "slim/psr7": "^1.8",
-        "envms/fluentpdo": "^2.2"
+        "envms/fluentpdo": "^2.2",
+        "firebase/php-jwt": "^7.0"
     }
 }

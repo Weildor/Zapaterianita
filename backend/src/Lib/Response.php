@@ -6,9 +6,10 @@ class Response {
     public $response = false;
     public $message = '';
 
-    public function SetResponse($response, $message = '') {
+    public function SetResponse($response, $message = '', $data = []) {
         $this->response = $response;
         $this->message = $message;
+        $this->result = $data; // <--- ¡ESTA LÍNEA ES LA CLAVE!
         
         // Retornamos el objeto completo para que el Controlador pueda convertirlo a JSON
         return $this; 
